@@ -7,8 +7,14 @@ const signupValidation = Joi.object({
     photoURL: Joi.string().uri().optional().allow(''),
     email: Joi.string().email().required(),
     password: Joi.string().min(6).required()
-});
+})
+
+const logInValidation = Joi.object({
+    email:Joi.string().email().required(),
+    password: Joi.string().min(6).required()
+})
 
 module.exports={
-    signupValidation
+    signupValidation,
+    logInValidation,
 }

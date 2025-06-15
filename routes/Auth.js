@@ -1,32 +1,105 @@
 const express=require('express');
 const router=express.Router();
 const User=require('../models/user.js');
-const {signupValidation}=require('../utils/validations.js')
+const {signupValidation,logInValidation}=require('../utils/validations.js')
+const bcrypt=require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 router.post('/signup', async (req, res) => {
+
+    //validating inputs from req.body
     const { error } = signupValidation.validate(req.body);
     if (error) {
-        return res.status(400).json({ message: error.details[0].message });
+        return res.status(411).json({ message: error.details[0].message });
     }
     const { firstName, email, password } = req.body;
+
     try {
+        //finding existing user in db
         const existingUser = await User.findOne({ email: email });
         if (existingUser) {
-            return res.status(400).json({ message: 'User already exists' });
+            return res.status(403).json({ message: 'User already exists' });
         }
+
+        const passwordHash=await bcrypt.hash(password,10)
 
         const newUser = new User({
             firstName: firstName,
             email: email,
-            password: password
+            password: passwordHash
         });
 
         await newUser.save();
-        return res.status(201).json({ message: 'User created successfully', user: newUser });
+
+        //creating jwt token for the new user , expires  in 1 day
+        const token =await jwt.sign({_id:newUser._id},process.env.JWT_KEY,{expiresIn:'1d'});
+
+        res.cookie("token",token,{
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+            path:'/',
+            maxAge:3600000*24
+        })
+
+        const userObj = newUser.toObject();
+        delete userObj.password;
+
+        return res.status(201).json({ message: 'User created successfully', user: userObj });
     } catch (err) {
         console.error("Signup Error:", err);
         return res.status(500).json({ message: 'Internal server error' });
     }
-});
+})
+
+
+router.post('/login', async (req, res) => {
+
+    //validating body
+    const {error}=logInValidation.validate(req.body)
+    if (error) {
+        return res.status(411).json({ message: error.details[0].message });
+    }
+
+    const {email,password} = req.body
+    try{
+        //check if the user  exists
+        const user=await User.findOne({ email: email })
+        if(!user){
+            return res.status(403).json({ message: 'Invalid Credentials' });
+        }
+        //validate password
+        const isValidPassword=await bcrypt.compare(password,user.password)
+        if(!isValidPassword){
+            return res.status(403).json({ message: 'Invalid Credentials' })
+        }
+
+        //create jwt token
+        const token=jwt.sign({_id:user._id},process.env.JWT_KEY,{expiresIn:'1d'});
+        res.cookie("token",token,{
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+            path:'/',
+            maxAge:3600000*24
+        })
+        const userObj = user.toObject();
+        delete userObj.password;
+
+        res.status(200).json({message: 'User logged in successfully',user:userObj})
+
+    }
+    catch (err) {
+        console.error("Signup Error:", err);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+})
+
+router.post('/logout',async (req, res) => {
+    res.cookie("token",null,{
+        expires:new Date(Date.now())
+    })
+    res.send({message:'Logged out successfully'})
+})
 
 module.exports = router;
