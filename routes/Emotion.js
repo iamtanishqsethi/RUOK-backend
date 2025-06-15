@@ -3,6 +3,9 @@ const router=express.Router();
 const Emotion = require('../models/emotion');
 const userAuth=require('../middleware/userAuth')
 
+
+//this api is for server admin only
+//TODO: disable this api end point for general user
 router.post('/new',userAuth,async (req,res)=>{
     const {title,description,type}=req.body
     try{
@@ -28,7 +31,7 @@ router.post('/new',userAuth,async (req,res)=>{
 router.get('/getAll',userAuth,async (req,res)=>{
     try{
         const allEmotions=await Emotion.find()
-        res.status(200).json({message:"Fetched All emotions",allEmotions})
+        res.status(200).json({message:"Fetched All emotions",data:allEmotions})
     }
     catch(err){
         console.log(err);

@@ -4,6 +4,8 @@ const cookieParser=require('cookie-parser')
 const {connectDb}=require("./utils/database")
 const AuthRouter=require('./routes/Auth.js')
 const EmotionRouter=require('./routes/Emotion.js')
+const CheckinRouter=require('./routes/Checkin.js')
+
 
 app.use(express.json());
 app.use(cookieParser())
@@ -13,7 +15,7 @@ require('dotenv').config();
 
 app.use('/api/auth',AuthRouter)
 app.use('/api/emotion',EmotionRouter)
-
+app.use('/api/checkin',CheckinRouter)
 
 
 connectDb().then(()=>{
