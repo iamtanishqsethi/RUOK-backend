@@ -7,10 +7,11 @@ const userAuth=require('../middleware/userAuth')
 //this api is for server admin only
 //TODO: disable this api end point for general user
 
-router.get('/getAll-peopleTags',userAuth,async (req,res)=>{
+router.get('/getAll-placeTags',userAuth,async (req,res)=>{
     try{
-        const allPlaceTags=await Place.find()
-        res.status(200).json({message:"Fetched All emotions",data:allPlaceTags})
+        const userId = req.user._id;
+        const allPlaceTags=await Place.find({userId:userId})
+        res.status(200).json({message:"Fetched All places",data:allPlaceTags})
     }
     catch(err){
         console.log(err);

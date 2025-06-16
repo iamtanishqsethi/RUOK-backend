@@ -9,8 +9,9 @@ const userAuth=require('../middleware/userAuth')
 
 router.get('/getAll-peopleTags',userAuth,async (req,res)=>{
     try{
-        const allPeopleTags=await People.find()
-        res.status(200).json({message:"Fetched All emotions",data:allPeopleTags})
+        const userId = req.user._id;
+        const allPeopleTags=await People.find({userId:userId})
+        res.status(200).json({message:"Fetched All People",data:allPeopleTags})
     }
     catch(err){
         console.log(err);

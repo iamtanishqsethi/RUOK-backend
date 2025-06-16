@@ -1,5 +1,4 @@
 const express=require('express')
-const mongoose = require('mongoose')
 const router=express.Router()
 const userAuth=require('../middleware/userAuth')
 const Checkin=require('../models/checkIn')
@@ -108,116 +107,77 @@ router.delete('/delete-checkin/:id',userAuth,async (req,res)=>{
     }
 })
 
+const mongoose = require('mongoose');
+
 router.put('/update-checkin/:id', userAuth, async (req, res) => {
     const checkinId = req.params.id;
     const userId = req.user._id;
     const { emotion, description, activityTag, placeTag, peopleTag } = req.body;
 
     try {
-        const validEmotion = await Emotion.findOne({ title: emotion });
-        if (!validEmotion) {
-            return res.status(400).send({ message: "Not a valid emotion" });
+        // Find the checkin for this user
+        const presentCheckin = await Checkin.findOne({ _id: checkinId, userId });
+        if (!presentCheckin) {
+            return res.status(404).json({ message: "Checkin not found for this user" });
         }
 
-        let activityTagId = null;
-        let placeTagId = null;
-        let peopleTagId = null;
+        // Update tag titles if provided
+        if (activityTag && presentCheckin.activityTag) {
+            const normalized = activityTag.toLowerCase().trim();
+            await ActivityTag.findOneAndUpdate(
+                { _id: presentCheckin.activityTag, userId },
+                { title: normalized }
+            );
+        }
 
-        if (activityTag) {
-            const normalizedTagValue = activityTag.toLowerCase().trim();
-            let existing = await ActivityTag.findOne({ title: normalizedTagValue, userId });
-            if (!existing) {
-                const newTag = new ActivityTag({ title: normalizedTagValue, userId });
-                existing = await newTag.save();
+        if (placeTag && presentCheckin.placeTag) {
+            const normalized = placeTag.toLowerCase().trim();
+            await PlaceTag.findOneAndUpdate(
+                { _id: presentCheckin.placeTag, userId },
+                { title: normalized }
+            );
+        }
+
+        if (peopleTag && presentCheckin.peopleTag) {
+            const normalized = peopleTag.toLowerCase().trim();
+            await PeopleTag.findOneAndUpdate(
+                { _id: presentCheckin.peopleTag, userId },
+                { title: normalized }
+            );
+        }
+
+        // If emotion is provided, validate and update
+        let emotionId = presentCheckin.emotion;
+        if (emotion) {
+            const validEmotion = await Emotion.findOne({ title: emotion.trim() });
+            if (!validEmotion) {
+                return res.status(400).json({ message: "Invalid emotion" });
             }
-            activityTagId = existing._id;
+            emotionId = validEmotion._id;
         }
 
-        if (placeTag) {
-            const normalizedTagValue = placeTag.toLowerCase().trim();
-            let existing = await PlaceTag.findOne({ title: normalizedTagValue, userId });
-            if (!existing) {
-                const newTag = new PlaceTag({ title: normalizedTagValue, userId });
-                existing = await newTag.save();
-            }
-            placeTagId = existing._id;
-        }
+        // Update the checkin description and emotion if changed
+        const updateFields = {};
+        if (description) updateFields.description = description;
+        if (emotionId) updateFields.emotion = emotionId;
 
-        if (peopleTag) {
-            const normalizedTagValue = peopleTag.toLowerCase().trim();
-            let existing = await PeopleTag.findOne({ title: normalizedTagValue, userId });
-            if (!existing) {
-                const newTag = new PeopleTag({ title: normalizedTagValue, userId });
-                existing = await newTag.save();
-            }
-            peopleTagId = existing._id;
-        }
+        const updateCheckin = await Checkin.findByIdAndUpdate(
+            checkinId,
+            { $set: updateFields },
+            { new: true }
+        ).populate('emotion activityTag placeTag peopleTag');
 
-        const updateCheckin = await Checkin.findOneAndUpdate(
-            { _id: checkinId },
-            {
-                description,
-                emotion: validEmotion._id,
-                activityTag: activityTagId,
-                placeTag: placeTagId,
-                peopleTag: peopleTagId,
-            }
-        );
+        res.status(200).json({
+            message: "Checkin updated successfully",
+            updatedCheckin: updateCheckin
+        });
 
-        if (!updateCheckin) {
-            return res.status(404).json({ message: "Checkin not found" });
-        }
-
-        res.status(200).json({ message: "Checkin updated successfully", updatedCheckin: updateCheckin });
     } catch (err) {
-        console.error(err);
+        console.error("Error updating checkin:", err);
         res.status(500).json({ message: "Internal Server Error In Updating Checkin" });
     }
 });
 
-router.get('/get-checkins-by-tags', userAuth, async (req, res) => {
-    try {
-        const userId = req.user._id;
-        const { activityTag, placeTag, peopleTag } = req.query;
 
-        let activitiesTagIds =[];
-        let placeTagIds =[]
-        let peopleTagIds=[]
-
-        const processTags=async (tagString,TagModel)=> {
-            if(!tagString) return [];
-            const tagTitles = tagString.split(',').map(tag=>tag.toLowerCase().trim()).filter(Boolean);
-            if(tagTitles.length === 0) return []
-
-            const foundTags = await TagModel.find({userId:userId, title: {$in : tagTitles}})
-            return foundTags.map(tag=>tag._id);
-        }
-
-        activitiesTagIds = await processTags(activityTag, ActivityTag);
-        placeTagIds = await processTags(placeTag, PlaceTag);
-        peopleTagIds = await processTags(peopleTag, PeopleTag);
-
-        if (activitiesTagIds.length > 0){
-            query.activityTag = { $in: activityTagIds };
-        }
-        if (placeTagIds.length > 0) {
-            query.placeTag = { $in: placeTagIds };
-        }
-        if (peopleTagIds.length > 0) {
-            query.peopleTag = { $in: peopleTagIds };
-        }
-
-        const checkins = await Checkin.find(query)
-            .populate('activityTag')
-            .populate('peopleTag')
-            .populate('placeTag')
-            .populate('emotion')
-
-        res.status(200).json({ checkins });
-    } catch (err) {
-        console.error("Error in /get-checkins-by-tags:", err);
-        res.status(500).json({ message: "Internal Server Error" });
-    }
-});
 
 module.exports=router
