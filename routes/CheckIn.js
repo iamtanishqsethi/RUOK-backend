@@ -18,8 +18,6 @@ router.get('/getAll',userAuth,async (req,res)=>{
     }
 })
 
-
-
 router.post('/new',userAuth,async (req,res)=>{
 
     try{
@@ -97,6 +95,83 @@ router.post('/new',userAuth,async (req,res)=>{
         res.status(500).json({message:"Internal Server Error"})
     }
 })
+
+router.delete('/delete-checkin/:id',userAuth,async (req,res)=>{
+    const checkinId = req.params.id
+    try {
+        const deletedCheckin = await Checkin.findOneAndDelete({_id:checkinId})
+        res.status(200).json({message:"Deleted checkIn",data:deletedCheckin})
+    }catch (err){
+        res.status(500).json({message:"Internal Server Error In Deleting Checkin"})
+    }
+})
+
+router.put('/update-checkin/:id', userAuth, async (req, res) => {
+    const checkinId = req.params.id;
+    const userId = req.user._id;
+    const { emotion, description, activityTag, placeTag, peopleTag } = req.body;
+
+    try {
+        const validEmotion = await Emotion.findOne({ title: emotion });
+        if (!validEmotion) {
+            return res.status(400).send({ message: "Not a valid emotion" });
+        }
+
+        let activityTagId = null;
+        let placeTagId = null;
+        let peopleTagId = null;
+
+        if (activityTag) {
+            const normalizedTagValue = activityTag.toLowerCase().trim();
+            let existing = await ActivityTag.findOne({ title: normalizedTagValue, userId });
+            if (!existing) {
+                const newTag = new ActivityTag({ title: normalizedTagValue, userId });
+                existing = await newTag.save();
+            }
+            activityTagId = existing._id;
+        }
+
+        if (placeTag) {
+            const normalizedTagValue = placeTag.toLowerCase().trim();
+            let existing = await PlaceTag.findOne({ title: normalizedTagValue, userId });
+            if (!existing) {
+                const newTag = new PlaceTag({ title: normalizedTagValue, userId });
+                existing = await newTag.save();
+            }
+            placeTagId = existing._id;
+        }
+
+        if (peopleTag) {
+            const normalizedTagValue = peopleTag.toLowerCase().trim();
+            let existing = await PeopleTag.findOne({ title: normalizedTagValue, userId });
+            if (!existing) {
+                const newTag = new PeopleTag({ title: normalizedTagValue, userId });
+                existing = await newTag.save();
+            }
+            peopleTagId = existing._id;
+        }
+
+        const updateCheckin = await Checkin.findOneAndUpdate(
+            { _id: checkinId },
+            {
+                description,
+                emotion: validEmotion._id,
+                activityTag: activityTagId,
+                placeTag: placeTagId,
+                peopleTag: peopleTagId,
+            }
+        );
+
+        if (!updateCheckin) {
+            return res.status(404).json({ message: "Checkin not found" });
+        }
+
+        res.status(200).json({ message: "Checkin updated successfully", updatedCheckin: updateCheckin });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Internal Server Error In Updating Checkin" });
+    }
+});
 
 
 module.exports=router
