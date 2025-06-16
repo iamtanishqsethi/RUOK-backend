@@ -6,7 +6,6 @@ const bcrypt=require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 router.post('/signup', async (req, res) => {
-
     //validating inputs from req.body
     const { error } = signupValidation.validate(req.body);
     if (error) {

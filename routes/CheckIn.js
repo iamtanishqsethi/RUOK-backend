@@ -99,8 +99,9 @@ router.post('/new',userAuth,async (req,res)=>{
 
 router.delete('/delete-checkin/:id',userAuth,async (req,res)=>{
     const checkinId = req.params.id
+    const userId = req.user._id;
     try {
-        const deletedCheckin = await Checkin.findOneAndDelete({_id:checkinId})
+        const deletedCheckin = await Checkin.findOneAndDelete({_id:checkinId, userId})
         res.status(200).json({message:"Deleted checkIn",data:deletedCheckin})
     }catch (err){
         res.status(500).json({message:"Internal Server Error In Deleting Checkin"})
