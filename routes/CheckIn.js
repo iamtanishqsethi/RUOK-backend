@@ -1,4 +1,5 @@
 const express=require('express')
+const mongoose = require('mongoose')
 const router=express.Router()
 const userAuth=require('../middleware/userAuth')
 const Checkin=require('../models/checkIn')
@@ -173,36 +174,49 @@ router.put('/update-checkin/:id', userAuth, async (req, res) => {
     }
 });
 
-router.get('/get-checkins-by-tags',userAuth,async (req,res)=>{
-    try{
+router.get('/get-checkins-by-tags', userAuth, async (req, res) => {
+    try {
         const userId = req.user._id;
-        const {activityTag , placeTag ,peopleTag} = req.query;
+        const { activityTag, placeTag, peopleTag } = req.query;
 
-        let query = {userId}
+        let activitiesTagIds =[];
+        let placeTagIds =[]
+        let peopleTagIds=[]
 
-        if (activityTag) {
-            const normalized = activityTag.toLowerCase().trim();
-            const existing = await ActivityTag.findOne({ title: normalized, userId });
-            if (existing) query.activityTag = existing._id;
+        const processTags=async (tagString,TagModel)=> {
+            if(!tagString) return [];
+            const tagTitles = tagString.split(',').map(tag=>tag.toLowerCase().trim()).filter(Boolean);
+            if(tagTitles.length === 0) return []
+
+            const foundTags = await TagModel.find({userId:userId, title: {$in : tagTitles}})
+            return foundTags.map(tag=>tag._id);
         }
 
-        if (placeTag) {
-            const normalized = placeTag.toLowerCase().trim();
-            const existing = await PlaceTag.findOne({ title: normalized, userId });
-            if (existing) query.placeTag = existing._id;
+        activitiesTagIds = await processTags(activityTag, ActivityTag);
+        placeTagIds = await processTags(placeTag, PlaceTag);
+        peopleTagIds = await processTags(peopleTag, PeopleTag);
+
+        if (activitiesTagIds.length > 0){
+            query.activityTag = { $in: activityTagIds };
+        }
+        if (placeTagIds.length > 0) {
+            query.placeTag = { $in: placeTagIds };
+        }
+        if (peopleTagIds.length > 0) {
+            query.peopleTag = { $in: peopleTagIds };
         }
 
-        if (peopleTag) {
-            const normalized = peopleTag.toLowerCase().trim();
-            const existing = await PeopleTag.findOne({ title: normalized, userId });
-            if (existing) query.peopleTag = existing._id;
-        }
+        const checkins = await Checkin.find(query)
+            .populate('activityTag')
+            .populate('peopleTag')
+            .populate('placeTag')
+            .populate('emotion')
 
-        const checkins = await Checkin.find(query).populate('activityTag placeTag peopleTag emotion');
         res.status(200).json({ checkins });
-    }catch(err){
-        console.error(err);
-        res.status(500).json({ message: "Internal Server Error Finding Checkin" });
+    } catch (err) {
+        console.error("Error in /get-checkins-by-tags:", err);
+        res.status(500).json({ message: "Internal Server Error" });
     }
-})
+});
+
 module.exports=router
