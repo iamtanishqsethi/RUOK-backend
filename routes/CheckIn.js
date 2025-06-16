@@ -173,5 +173,36 @@ router.put('/update-checkin/:id', userAuth, async (req, res) => {
     }
 });
 
+router.get('/get-checkins-by-tags',userAuth,async (req,res)=>{
+    try{
+        const userId = req.user._id;
+        const {activityTag , placeTag ,peopleTag} = req.query;
 
+        let query = {userId}
+
+        if (activityTag) {
+            const normalized = activityTag.toLowerCase().trim();
+            const existing = await ActivityTag.findOne({ title: normalized, userId });
+            if (existing) query.activityTag = existing._id;
+        }
+
+        if (placeTag) {
+            const normalized = placeTag.toLowerCase().trim();
+            const existing = await PlaceTag.findOne({ title: normalized, userId });
+            if (existing) query.placeTag = existing._id;
+        }
+
+        if (peopleTag) {
+            const normalized = peopleTag.toLowerCase().trim();
+            const existing = await PeopleTag.findOne({ title: normalized, userId });
+            if (existing) query.peopleTag = existing._id;
+        }
+
+        const checkins = await Checkin.find(query).populate('activityTag placeTag peopleTag emotion');
+        res.status(200).json({ checkins });
+    }catch(err){
+        console.error(err);
+        res.status(500).json({ message: "Internal Server Error Finding Checkin" });
+    }
+})
 module.exports=router
