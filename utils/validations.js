@@ -14,7 +14,15 @@ const logInValidation = Joi.object({
     password: Joi.string().min(6).required()
 })
 
+const editProfileValidation = (req)=>{
+    const allowedEditFields=['firstName','lastName','photoUrl']
+    return Object.keys(req.body).every((field) =>
+        allowedEditFields.includes(field)
+    )
+}
+
 module.exports={
     signupValidation,
     logInValidation,
+    editProfileValidation,
 }
