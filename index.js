@@ -4,17 +4,16 @@ const cookieParser=require('cookie-parser')
 const {connectDb}=require("./utils/database")
 const AuthRouter=require('./routes/Auth.js')
 const EmotionRouter=require('./routes/Emotion.js')
-const CheckinRouter=require('./routes/Checkin.js')
 const PlaceTagRouter=require('./routes/PlaceTag.js')
 const ActivityTagRouter=require('./routes/ActivityTag.js')
 const PeopleTagRouter=require('./routes/PeopleTag.js')
+const CheckinRouter=require('./routes/CheckIn.js')
+const ProfileRouter=require('./routes/Profile.js')
 
 
 app.use(express.json());
 app.use(cookieParser())
 require('dotenv').config();
-
-
 
 app.use('/api/auth',AuthRouter)
 app.use('/api/emotion',EmotionRouter)
@@ -22,6 +21,7 @@ app.use('/api/checkin',CheckinRouter)
 app.use('/api/placeTag',PlaceTagRouter)
 app.use('/api/activityTag',ActivityTagRouter)
 app.use('/api/peopleTag',PeopleTagRouter)
+app.use('/api/profile',ProfileRouter)
 
 
 connectDb().then(()=>{
