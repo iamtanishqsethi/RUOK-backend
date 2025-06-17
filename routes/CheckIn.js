@@ -96,7 +96,7 @@ router.post('/new',userAuth,async (req,res)=>{
     }
 })
 
-router.delete('/delete-checkin/:id',userAuth,async (req,res)=>{
+router.delete('/delete/:id',userAuth,async (req,res)=>{
     const checkinId = req.params.id
     const userId = req.user._id;
     try {
@@ -107,9 +107,7 @@ router.delete('/delete-checkin/:id',userAuth,async (req,res)=>{
     }
 })
 
-const mongoose = require('mongoose');
-
-router.put('/update-checkin/:id', userAuth, async (req, res) => {
+router.patch('/update/:id', userAuth, async (req, res) => {
     const checkinId = req.params.id;
     const userId = req.user._id;
     const { emotion, description, activityTag, placeTag, peopleTag } = req.body;

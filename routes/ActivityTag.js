@@ -3,11 +3,7 @@ const router=express.Router();
 const Activity = require('../models/activityTag');
 const userAuth=require('../middleware/userAuth')
 
-
-//this api is for server admin only
-//TODO: disable this api end point for general user
-
-router.get('/getAll-activityTags',userAuth,async (req,res)=>{
+router.get('/getAll',userAuth,async (req,res)=>{
     try{
         const userId = req.user._id;
         const allPeopleTags=await Activity.find({userId:userId})

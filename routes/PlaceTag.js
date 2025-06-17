@@ -3,11 +3,7 @@ const router=express.Router();
 const Place = require('../models/placeTag');
 const userAuth=require('../middleware/userAuth')
 
-
-//this api is for server admin only
-//TODO: disable this api end point for general user
-
-router.get('/getAll-placeTags',userAuth,async (req,res)=>{
+router.get('/getAll',userAuth,async (req,res)=>{
     try{
         const userId = req.user._id;
         const allPlaceTags=await Place.find({userId:userId})
