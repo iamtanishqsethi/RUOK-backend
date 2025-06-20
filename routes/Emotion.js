@@ -7,7 +7,7 @@ const userAuth=require('../middleware/userAuth')
 //this api is for server admin only
 //TODO: disable this api end point for general user
 router.post('/new',userAuth,async (req,res)=>{
-    const {title,description,type}=req.body
+    const {title,description,type,intensity}=req.body
     try{
         const existingEmotion =await Emotion.findOne({title})
         if(existingEmotion){
@@ -16,7 +16,8 @@ router.post('/new',userAuth,async (req,res)=>{
         const emotion = new Emotion({
             title,
             description,
-            type
+            type,
+            intensity
         })
         await emotion.save()
         res.status(200).json({message:"Emotion created successfully ",emotion})

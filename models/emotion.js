@@ -14,6 +14,10 @@ const emotionSchema=new mongoose.Schema ({
         type:String,
         enum:['High Energy Unpleasant','Low Energy Unpleasant','High Energy Pleasant','Low Energy Pleasant'],
         required:true
+    },
+    intensity:{
+        type:Number,
+        required:true,
     }
 })
 
