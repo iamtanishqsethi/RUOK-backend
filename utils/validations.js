@@ -15,7 +15,7 @@ const logInValidation = Joi.object({
 })
 
 const editProfileValidation = (req)=>{
-    const allowedEditFields=['firstName','lastName','photoUrl']
+    const allowedEditFields=['firstName','lastName','photoUrl','bio','photoUrl'];
     return Object.keys(req.body).every((field) =>
         allowedEditFields.includes(field)
     )

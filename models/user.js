@@ -6,6 +6,11 @@ const UserSchema = new Schema({
     lastName: {type: String },
     email: {type: String, required: true},
     password: {type: String, required: true},
+    bio:{type: String},
     photoUrl: {type: String,default: "https://images.icon-icons.com/1378/PNG/512/avatardefault_92824.png"},
+    selfNotes:[{
+        type: Schema.Types.ObjectId,
+        ref: 'selfNote',
+    }],
 })
 module.exports=mongoose.model('User',UserSchema);

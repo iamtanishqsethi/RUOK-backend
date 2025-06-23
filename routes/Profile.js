@@ -7,17 +7,22 @@ const {editProfileValidation}=require('../utils/validations')
 
 router.get('/get', userAuth, async (req, res) => {
     try {
-        const userId=req.user._id
-        const user = await User.findById(userId).select('-password');
+        const userId = req.user._id;
+        const user = await User.findById(userId)
+            .select('-password')
+            .populate('selfNotes');
+
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
+
         res.status(200).json({ message: "fetched", data: user });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "error" });
     }
-})
+});
+
 
 router.patch('/edit', userAuth, async (req, res) => {
     try{
