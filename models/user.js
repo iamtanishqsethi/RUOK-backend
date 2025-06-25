@@ -8,9 +8,5 @@ const UserSchema = new Schema({
     password: {type: String, required: true},
     bio:{type: String},
     photoUrl: {type: String,default: "https://images.icon-icons.com/1378/PNG/512/avatardefault_92824.png"},
-    selfNotes:[{
-        type: Schema.Types.ObjectId,
-        ref: 'selfNote',
-    }],
 })
 module.exports=mongoose.model('User',UserSchema);
