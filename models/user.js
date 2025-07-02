@@ -8,5 +8,6 @@ const UserSchema = new Schema({
     password: {type: String, required: true},
     bio:{type: String},
     photoUrl: {type: String,default: "https://ui-private.shadcn.com/avatars/02.png"},
-})
+    isGuest:{type: Boolean, default: false},
+},{timestamps: true});
 module.exports=mongoose.model('User',UserSchema);
