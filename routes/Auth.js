@@ -94,6 +94,51 @@ router.post('/login', async (req, res) => {
     }
 })
 
+router.post('/guest-login',async (req,res)=>{
+    try{
+        const guestId = `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+        const guestUser=new User({
+            firstName:'Guest',
+            lastName:'User',
+            email: `${guestId}@guest.temp`,
+            password: await bcrypt.hash(guestId, 10),
+            bio: "Guest user account",
+            isGuest: true
+        })
+        await guestUser.save();
+
+        const token = jwt.sign(
+            { _id: guestUser._id, isGuest: true },
+            process.env.JWT_KEY,
+            { expiresIn: '1h' } // Shorter expiration for guests
+        );
+
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+            path: '/',
+            maxAge: 3600000 // 1 hour
+        });
+
+        const userObj = guestUser.toObject();
+        delete userObj.password;
+
+        res.status(200).json({
+            message: 'Guest login successful',
+            user: userObj,
+            isGuest: true
+        });
+    }
+    catch (err) {
+        console.error("Signup Error:", err);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+
+})
+
+
 router.post('/logout',async (req, res) => {
     res.cookie("token",null,{
         expires:new Date(Date.now())
