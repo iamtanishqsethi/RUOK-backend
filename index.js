@@ -29,12 +29,38 @@ app.use('/api/peopleTag',PeopleTagRouter)
 app.use('/api/profile',ProfileRouter)
 app.use('/api/selfNote',SelfNoteRouter)
 
-connectDb().then(()=>{
-    console.log("connected to database")
-    // app.listen(8000,()=>console.log("Server is running on port 8000"))
-}).catch(()=>{
-    console.log("Error while connecting to database")
+// Database connection with better error handling
+let isDbConnected = false;
+
+const ensureDbConnection = async () => {
+    if (!isDbConnected) {
+        try {
+            await connectDb();
+            isDbConnected = true;
+            console.log("Connected to database");
+        } catch (error) {
+            console.error("Database connection failed:", error);
+            throw error;
+        }
+    }
+};
+
+// Connect to database on startup
+ensureDbConnection().catch(error => {
+    console.error("Initial database connection failed:", error);
 })
+app.use('/api', async (req, res, next) => {
+    try {
+        await ensureDbConnection();
+        next();
+    } catch (error) {
+        console.error("Database connection middleware error:", error);
+        res.status(500).json({
+            error: 'Database connection failed',
+            message: 'Internal server error'
+        });
+    }
+});
 
 module.exports=app;
 
