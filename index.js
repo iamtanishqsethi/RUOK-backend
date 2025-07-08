@@ -31,9 +31,15 @@ app.use('/api/selfNote',SelfNoteRouter)
 
 connectDb().then(()=>{
     console.log("connected to database")
-    app.listen(8000,()=>console.log("Server is running on port 8000"))
+    // app.listen(8000,()=>console.log("Server is running on port 8000"))
 }).catch(()=>{
     console.log("Error while connecting to database")
 })
+
+module.exports=app;
+
+if(require.main===module){
+    app.listen(8000,()=>console.log("Server is running on port 8000"))
+}
 
 
