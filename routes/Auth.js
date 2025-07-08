@@ -142,10 +142,19 @@ router.post('/guest-login',async (req,res)=>{
 router.delete('/delete-guest',userAuth,async (req,res)=>{
     try{
        const userId=req.user._id
-        const isValidUser=User.findByIdAndDelete(userId)
+        const isValidUser=await User.findByIdAndDelete(userId)
         if(!isValidUser){
             return res.status(404).json({ message: 'Invalid Credentials' });
         }
+
+        res.cookie("token", null, {
+            expires: new Date(Date.now()),
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+            path: '/'
+        })
+
         return res.status(200).json({message: 'User deleted successfully'})
     }
     catch(err){
