@@ -5,6 +5,8 @@ const {signupValidation,logInValidation}=require('../utils/validations.js')
 const bcrypt=require('bcrypt');
 const jwt = require('jsonwebtoken');
 const userAuth = require("../middleware/userAuth");
+const {OAuth2Client}=require('google-auth-library');
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 router.post('/signup', async (req, res) => {
     //validating inputs from req.body
@@ -92,6 +94,47 @@ router.post('/login', async (req, res) => {
     catch (err) {
         console.error("Signup Error:", err);
         return res.status(500).json({ message: 'Internal server error' });
+    }
+})
+
+router.post('/google-auth', async (req, res) => {
+    try{
+        const {credential}=req.body //google id
+
+        const ticket=await client.verifyIdToken({
+            idToken:credential,
+            audience:process.env.GOOGLE_CLIENT_ID
+        })
+        const payload=ticket.getPayload();
+        const {email,given_name,family_name,picture}=payload
+
+        let user=await User.findOne({email})
+        if(!user){
+            user=new User({
+                firstName:given_name,
+                lastName:family_name,
+                email:email,
+                photoUrl:picture,
+                isGoogleAuth:true
+            })
+            await user.save()
+        }
+        const token=jwt.sign({_id:user._id},process.env.JWT_KEY,{expiresIn:'1d'});
+        res.cookie("token",token,{
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+            path:'/',
+            maxAge:3600000*24
+        })
+        const userObj = user.toObject();
+        delete userObj.password;
+
+        res.status(200).json({message:'Google login successful',user:userObj})
+    }
+    catch (error) {
+        console.error('Google auth error:', error);
+        res.status(401).json({ message: 'Invalid Google token' });
     }
 })
 
