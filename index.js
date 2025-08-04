@@ -11,6 +11,7 @@ const PeopleTagRouter=require('./routes/PeopleTag.js')
 const CheckinRouter=require('./routes/CheckIn.js')
 const ProfileRouter=require('./routes/Profile.js')
 const SelfNoteRouter=require('./routes/SelfNote.js')
+const FeedbackRouter=require('./routes/Feedback.js')
 
 app.use(cors({
     origin:['http://localhost:5173','https://ru-ok.vercel.app'],
@@ -28,6 +29,7 @@ app.use('/api/activityTag',ActivityTagRouter)
 app.use('/api/peopleTag',PeopleTagRouter)
 app.use('/api/profile',ProfileRouter)
 app.use('/api/selfNote',SelfNoteRouter)
+app.use('/api/feedback',FeedbackRouter)
 
 connectDb().then(()=>{
     console.log("connected to database")
