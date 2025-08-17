@@ -20,6 +20,7 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser())
 require('dotenv').config();
+require('./utils/cronJobs')
 
 app.use('/api/auth',AuthRouter)
 app.use('/api/emotion',EmotionRouter)
