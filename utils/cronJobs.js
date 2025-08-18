@@ -24,7 +24,7 @@ const deleteGuestUsers=async ()=>{
 }
 
 
-cron.schedule('0 9 * * *', deleteGuestUsers,{
+cron.schedule('30 9 * * *', deleteGuestUsers,{
     scheduled: true,
     timezone: 'Asia/Kolkata'
 })
