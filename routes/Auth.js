@@ -101,6 +101,7 @@ router.post('/google-auth', async (req, res) => {
         const {email,given_name,family_name,picture}=payload
 
         let user=await User.findOne({email})
+        let isNewUser=false
         if(!user){
             user=new User({
                 firstName:given_name,
@@ -110,6 +111,7 @@ router.post('/google-auth', async (req, res) => {
                 isGoogleAuth:true
             })
             await user.save()
+            isNewUser=true
         }
         const token=jwt.sign({_id:user._id},process.env.JWT_KEY,{expiresIn:'1d'});
         res.cookie("token",token,{
@@ -118,7 +120,7 @@ router.post('/google-auth', async (req, res) => {
         const userObj = user.toObject();
         delete userObj.password;
 
-        res.status(200).json({message:'Google login successful',user:userObj})
+        res.status(200).json({message:'Google login successful',user:userObj,isNewUser})
     }
     catch (error) {
         console.error('Google auth error:', error);
