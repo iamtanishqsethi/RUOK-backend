@@ -37,11 +37,7 @@ router.post('/signup', async (req, res) => {
         const token =await jwt.sign({_id:newUser._id},process.env.JWT_KEY,{expiresIn:'1d'});
 
         res.cookie("token",token,{
-            httpOnly: true,
-            secure: true,
-            sameSite: 'none',
-            path:'/',
-            maxAge:3600000*24
+            expires: new Date(Date.now() + 8 * 3600000),
         })
 
         const userObj = newUser.toObject();
@@ -79,11 +75,7 @@ router.post('/login', async (req, res) => {
         //create jwt token
         const token=jwt.sign({_id:user._id},process.env.JWT_KEY,{expiresIn:'1d'});
         res.cookie("token",token,{
-            httpOnly: true,
-            secure: true,
-            sameSite: 'none',
-            path:'/',
-            maxAge:3600000*24
+            expires: new Date(Date.now() + 8 * 3600000),
         })
         const userObj = user.toObject();
         delete userObj.password;
@@ -109,6 +101,7 @@ router.post('/google-auth', async (req, res) => {
         const {email,given_name,family_name,picture}=payload
 
         let user=await User.findOne({email})
+        let isNewUser=false
         if(!user){
             user=new User({
                 firstName:given_name,
@@ -118,19 +111,16 @@ router.post('/google-auth', async (req, res) => {
                 isGoogleAuth:true
             })
             await user.save()
+            isNewUser=true
         }
         const token=jwt.sign({_id:user._id},process.env.JWT_KEY,{expiresIn:'1d'});
         res.cookie("token",token,{
-            httpOnly: true,
-            secure: true,
-            sameSite: 'none',
-            path:'/',
-            maxAge:3600000*24
+            expires: new Date(Date.now() + 8 * 3600000),
         })
         const userObj = user.toObject();
         delete userObj.password;
 
-        res.status(200).json({message:'Google login successful',user:userObj})
+        res.status(200).json({message:'Google login successful',user:userObj,isNewUser})
     }
     catch (error) {
         console.error('Google auth error:', error);
@@ -159,11 +149,7 @@ router.post('/guest-login',async (req,res)=>{
         );
 
         res.cookie("token", token, {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'none',
-            path: '/',
-            maxAge: 3600000 // 1 hour
+            expires: new Date(Date.now() + 3600000),
         });
 
         const userObj = guestUser.toObject();
@@ -192,10 +178,6 @@ router.delete('/delete-guest',userAuth,async (req,res)=>{
 
         res.cookie("token", null, {
             expires: new Date(Date.now()),
-            httpOnly: true,
-            secure: true,
-            sameSite: 'none',
-            path: '/'
         })
 
         return res.status(200).json({message: 'User deleted successfully'})

@@ -14,7 +14,7 @@ const SelfNoteRouter=require('./routes/SelfNote.js')
 const FeedbackRouter=require('./routes/Feedback.js')
 
 app.use(cors({
-    origin:['http://localhost:5173','https://ru-ok.vercel.app'],
+    origin:['http://localhost:5173','https://ru-ok.vercel.app','https://ru-ok.in'],
     credentials: true,
 }))
 app.use(express.json());
