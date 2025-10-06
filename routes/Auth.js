@@ -36,9 +36,13 @@ router.post('/signup', async (req, res) => {
         //creating jwt token for the new user , expires  in 1 day
         const token =await jwt.sign({_id:newUser._id},process.env.JWT_KEY,{expiresIn:'1d'});
 
-        res.cookie("token",token,{
-            expires: new Date(Date.now() + 8 * 3600000),
-        })
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+            path: '/',
+            maxAge: 3600000 * 24
+        });
 
         const userObj = newUser.toObject();
         delete userObj.password;
@@ -74,9 +78,13 @@ router.post('/login', async (req, res) => {
 
         //create jwt token
         const token=jwt.sign({_id:user._id},process.env.JWT_KEY,{expiresIn:'1d'});
-        res.cookie("token",token,{
-            expires: new Date(Date.now() + 8 * 3600000),
-        })
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+            path: '/',
+            maxAge: 3600000 * 24
+        });
         const userObj = user.toObject();
         delete userObj.password;
 
@@ -114,9 +122,13 @@ router.post('/google-auth', async (req, res) => {
             isNewUser=true
         }
         const token=jwt.sign({_id:user._id},process.env.JWT_KEY,{expiresIn:'1d'});
-        res.cookie("token",token,{
-            expires: new Date(Date.now() + 8 * 3600000),
-        })
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+            path: '/',
+            maxAge: 3600000 * 24
+        });
         const userObj = user.toObject();
         delete userObj.password;
 
@@ -148,8 +160,12 @@ router.post('/guest-login',async (req,res)=>{
             { expiresIn: '1h' } // Shorter expiration for guests
         );
 
-        res.cookie("token", token, {
-            expires: new Date(Date.now() + 3600000),
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+            path: '/',
+            maxAge: 3600000
         });
 
         const userObj = guestUser.toObject();
@@ -178,6 +194,10 @@ router.delete('/delete-guest',userAuth,async (req,res)=>{
 
         res.cookie("token", null, {
             expires: new Date(Date.now()),
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+            path: '/'
         })
 
         return res.status(200).json({message: 'User deleted successfully'})
