@@ -32,6 +32,10 @@ app.use('/api/profile',ProfileRouter)
 app.use('/api/selfNote',SelfNoteRouter)
 app.use('/api/feedback',FeedbackRouter)
 
+app.get('/',(req,res)=>{
+    res.send("Server is running")
+})
+
 connectDb().then(()=>{
     console.log("connected to database")
     // app.listen(8000,()=>console.log("Server is running on port 8000"))
